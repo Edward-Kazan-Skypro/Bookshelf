@@ -18,11 +18,12 @@ public class Main {
     }
 
     public static Map returnSortedBooksList(List booksList) {
+        List sortedList = new ArrayList<>(booksList);
         //Сразу отсортируем по алфавиту (по возрастанию) названия книг
-        LinkedList<String> sortedList = new LinkedList<>(new TreeSet<String>(booksList));
+        Collections.sort(sortedList);
         //Найдем количество книг, которые будем класть на полку
         int bookShelfCounter = 5; //количество полок
-        int minBookShelfCapacity = sortedList.size()/bookShelfCounter; //минимальное количество книг на полке
+        int minBookShelfCapacity = sortedList.size() / bookShelfCounter; //минимальное количество книг на полке
         int maxBookShelfCapacity = minBookShelfCapacity + 1; //максимальное количество книг на полке
         //Как представить эти полки?
         //Попробуем через Map
@@ -32,36 +33,27 @@ public class Main {
         int currentBookShelfCapacity = maxBookShelfCapacity; //текущая емкость полки
         int startRange = 0; //начало диапазона для копирования
         int finishRange = startRange + currentBookShelfCapacity; //окончание диапазона для копирования
-        int balanceBooks = sortedList.size(); //остаток свободного места на полках
-        int balanceBookShelfs = bookShelfCounter; //остаток свободных полок
-        System.out.println("осталось " + balanceBooks + " книг положить на " + balanceBookShelfs + " полок");
-        //Создадим буферный список книг
-        LinkedList<String> bufferBookList = new LinkedList<>();
+        int balanceBooks = sortedList.size(); //количество пустых полок
+        int balanceBookShelfs; //количество книг, которые осталось разложить
         //Цикл нужен для получения ключа для Map
-        for (int i = 1; i < bookShelfCounter+1; i++) {
-            //Добавляем в буферный список часть из отсортированного общего списка
-            bufferBookList.addAll(sortedList.subList(startRange, finishRange));
-            //Добавляем собранную полку в стеллаж
-            //Здесь допущение - представим что полки собираются в стеллаж(для этого и ввели Map)
-            bookCase.put(i, bufferBookList);
-            //Узнаем остаток свободного места на полках
-            balanceBooks = balanceBooks - currentBookShelfCapacity;
-            //Узнаем количество еще не заполненных полок
+        for (int i = 1; i < bookShelfCounter + 1; i++) {
+            //Книги из диапазона кладем на полку
+            bookCase.put(i, new LinkedList<>(sortedList.subList(startRange, finishRange)));
+            //Уменьшаем остаток неразложенных книг
+            balanceBooks =  balanceBooks - currentBookShelfCapacity;
+            //Уменьшаем количество пустых полок
             balanceBookShelfs = bookShelfCounter - i;
-            System.out.println("осталось " + balanceBooks + " книг положить на " + balanceBookShelfs + " полок");
-            //Делаем проверку оставшихся незаполненных полок на равенство нулю, т.к. дальше будем делать деление
-            if (balanceBookShelfs == 0) {
-                return bookCase;
+            if (balanceBookShelfs != 0) {
+                //Если оставшиеся книги можно в равном количестве разложить на оставшиеся полки,
+                //то меняем количество книг, выкладываемых на полку
+                //например, было по 3 книги, теперь кладем по 2 книги на полку
+                if (balanceBooks % balanceBookShelfs == 0) {
+                    currentBookShelfCapacity = minBookShelfCapacity;
+                }
+                //Обновляем начало и конец диапазона
+                startRange = finishRange;
+                finishRange = finishRange + currentBookShelfCapacity;
             }
-            //Если на оставшиеся полки можно в равном количестве разложить книги, то это количество и берем
-            if (balanceBooks % balanceBookShelfs == 0) {
-                currentBookShelfCapacity = minBookShelfCapacity;
-            }
-            //Обновляем начало и конец диапазона
-            startRange = finishRange;
-            finishRange = finishRange + currentBookShelfCapacity;
-            //Обновляем буферный список
-            bufferBookList = new LinkedList<>();
         }
         return bookCase;
     }
